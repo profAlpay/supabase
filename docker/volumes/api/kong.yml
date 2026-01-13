@@ -183,7 +183,9 @@ services:
           - /storage/v1/
     plugins:
       - name: cors
-
+      - name: key-auth 
+        config:
+          hide_credentials: false 
   ## Edge Functions routes
   - name: functions-v1
     _comment: 'Edge Functions: /functions/v1/* -> http://functions:9000/*'
