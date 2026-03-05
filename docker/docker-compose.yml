@@ -64,6 +64,9 @@ services:
     volumes:
       - ./volumes/snippets:/app/snippets:Z
       - ./volumes/functions:/app/edge-functions:Z
+    networks:
+      - default
+      - dokploy-network
 
   kong:
     container_name: supabase-kong
@@ -96,6 +99,9 @@ services:
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
     # https://unix.stackexchange.com/a/294837
     entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    networks:
+      - default
+      - dokploy-network
 
   auth:
     container_name: supabase-auth
@@ -599,3 +605,9 @@ services:
 volumes:
   db-config:
   deno-cache:
+
+networks:
+  default:
+    name: supabasebackend-supabase_default
+  dokploy-network:
+    external: true
