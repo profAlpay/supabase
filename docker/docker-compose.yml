@@ -66,7 +66,6 @@ services:
       - ./volumes/functions:/app/edge-functions:Z
     networks:
       - default
-      - dokploy-network
 
   kong:
     container_name: supabase-kong-ehoos
@@ -101,7 +100,6 @@ services:
     entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
     networks:
       - default
-      - dokploy-network
 
   auth:
     container_name: supabase-auth-ehoos
@@ -605,8 +603,11 @@ services:
 
 volumes:
   db-config:
+    name: supabase-ehoos_db-config
   deno-cache:
+    name: supabase-ehoos_deno-cache
   db-data:
+    name: supabase-ehoos_db-data
 
 
 networks:
