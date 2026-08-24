@@ -103,7 +103,7 @@ services:
 
   auth:
     container_name: supabase-auth-ehoos
-    image: supabase/gotrue:v2.186.0
+    image: e-hoos-auth:v2.186.0-case
     restart: unless-stopped
     healthcheck:
       test:
