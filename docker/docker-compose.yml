@@ -5,12 +5,12 @@
 #   Destroy:            docker compose -f docker-compose.yml -f ./dev/docker-compose.dev.yml down -v --remove-orphans
 #   Reset everything:  ./reset.sh
 
-name: supabase
+name: supabase-ehoos
 
 services:
 
   studio:
-    container_name: supabase-studio
+    container_name: supabase-studio-ehoos
     image: supabase/studio:2026.02.16-sha-26c615c
     restart: unless-stopped
     healthcheck:
@@ -66,10 +66,9 @@ services:
       - ./volumes/functions:/app/edge-functions:Z
     networks:
       - default
-      - dokploy-network
 
   kong:
-    container_name: supabase-kong
+    container_name: supabase-kong-ehoos
     image: kong:2.8.1
     restart: unless-stopped
     ports:
@@ -101,10 +100,9 @@ services:
     entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
     networks:
       - default
-      - dokploy-network
 
   auth:
-    container_name: supabase-auth
+    container_name: supabase-auth-ehoos
     image: supabase/gotrue:v2.186.0
     restart: unless-stopped
     healthcheck:
@@ -167,6 +165,9 @@ services:
       GOTRUE_EXTERNAL_PHONE_ENABLED: ${ENABLE_PHONE_SIGNUP}
       GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM}
 
+      GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED: "true"
+      GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI: "pg-functions://postgres/public/custom_access_token_hook"
+
       # Uncomment to enable OAuth / social login providers.
       # GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_ENABLED}
       # GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
@@ -228,7 +229,7 @@ services:
       # GOTRUE_HOOK_SEND_EMAIL_SECRETS: "v1,whsec_VGhpcyBpcyBhbiBleGFtcGxlIG9mIGEgc2hvcnRlciBCYXNlNjQgc3RyaW5n"
 
   rest:
-    container_name: supabase-rest
+    container_name: supabase-rest-ehoos
     image: postgrest/postgrest:v14.5
     restart: unless-stopped
     depends_on:
@@ -252,7 +253,7 @@ services:
 
   realtime:
     # This container name looks inconsistent but is correct because realtime constructs tenant id by parsing the subdomain
-    container_name: realtime-dev.supabase-realtime
+    container_name: realtime-dev.supabase-realtime-ehoos
     image: supabase/realtime:v2.76.5
     restart: unless-stopped
     depends_on:
@@ -292,7 +293,7 @@ services:
 
   # To use S3 backed storage: docker compose -f docker-compose.yml -f docker-compose.s3.yml up
   storage:
-    container_name: supabase-storage
+    container_name: supabase-storage-ehoos
     image: supabase/storage-api:v1.37.8
     restart: unless-stopped
     depends_on:
@@ -346,7 +347,7 @@ services:
       - ./volumes/storage:/var/lib/storage:z
 
   imgproxy:
-    container_name: supabase-imgproxy
+    container_name: supabase-imgproxy-ehoos
     image: darthsim/imgproxy:v3.30.1
     restart: unless-stopped
     volumes:
@@ -369,7 +370,7 @@ services:
       IMGPROXY_MAX_SRC_RESOLUTION: 16.8
 
   meta:
-    container_name: supabase-meta
+    container_name: supabase-meta-ehoos
     image: supabase/postgres-meta:v0.95.2
     restart: unless-stopped
     depends_on:
@@ -388,7 +389,7 @@ services:
       CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
 
   functions:
-    container_name: supabase-edge-functions
+    container_name: supabase-edge-functions-ehoos
     image: supabase/edge-runtime:v1.70.3
     restart: unless-stopped
     volumes:
@@ -414,7 +415,7 @@ services:
       ]
 
   analytics:
-    container_name: supabase-analytics
+    container_name: supabase-analytics-ehoos
     image: supabase/logflare:1.31.2
     restart: unless-stopped
     # ports:
@@ -462,7 +463,7 @@ services:
 
   # Comment out everything below this point if you are using an external Postgres database
   db:
-    container_name: supabase-db
+    container_name: supabase-db-ehoos
     image: supabase/postgres:15.8.1.085
     restart: unless-stopped
     volumes:
@@ -473,8 +474,9 @@ services:
       - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
       # Initialize the database settings with JWT_SECRET and JWT_EXP
       - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
-      # PGDATA directory is persisted between restarts
-      - ./volumes/db/data:/var/lib/postgresql/data:Z
+           # PGDATA directory is persisted between restarts
+      - db-data:/var/lib/postgresql/data
+
       # Changes required for internal supabase data such as _analytics
       - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
       # Changes required for Analytics support
@@ -519,7 +521,7 @@ services:
       ]
 
   vector:
-    container_name: supabase-vector
+    container_name: supabase-vector-ehoos
     image: timberio/vector:0.53.0-alpine
     restart: unless-stopped
     volumes:
@@ -550,7 +552,7 @@ services:
 
   # Update the DATABASE_URL if you are using an external Postgres database
   supavisor:
-    container_name: supabase-pooler
+    container_name: supabase-pooler-ehoos
     image: supabase/supavisor:2.7.4
     restart: unless-stopped
     ports:
@@ -604,10 +606,15 @@ services:
 
 volumes:
   db-config:
+    name: supabase-ehoos_db-config
   deno-cache:
+    name: supabase-ehoos_deno-cache
+  db-data:
+    name: supabase-ehoos_db-data
+
 
 networks:
   default:
-    name: supabasebackend-supabase_default
+    name: supabaseehoos-supabase_default
   dokploy-network:
     external: true
