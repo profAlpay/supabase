@@ -627,6 +627,28 @@ services:
     volumes:
       - db-backups:/backups
 
+  # Yedekleri Google Drive'a kopyalar (6 saatte bir). Token Dokploy env'inde: RCLONE_GDRIVE_TOKEN
+  backup-offsite:
+    container_name: supabase-backup-offsite-qrkapi
+    image: rclone/rclone:1
+    restart: unless-stopped
+    depends_on:
+      - backup
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          rclone copy /backups gdrive:qrkapi-backups --max-age 3d --include "*.sql.gz" --transfers 2 -v
+          rclone delete gdrive:qrkapi-backups --min-age 200d --include "*.sql.gz" -v
+          sleep 21600
+        done
+    environment:
+      RCLONE_CONFIG_GDRIVE_TYPE: drive
+      RCLONE_CONFIG_GDRIVE_SCOPE: drive.file
+      RCLONE_CONFIG_GDRIVE_TOKEN: ${RCLONE_GDRIVE_TOKEN}
+    volumes:
+      - db-backups:/backups:ro
+
 volumes:
   db-config:
     name: supabase-qrkapi_db-config
