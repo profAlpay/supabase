@@ -4,6 +4,8 @@ console.log('main function started')
 
 const JWT_SECRET = Deno.env.get('JWT_SECRET')
 const VERIFY_JWT = Deno.env.get('VERIFY_JWT') === 'true'
+// Cloud'daki verify_jwt=false fonksiyonlari (kendi yetki kontrollerini yapar)
+const NO_VERIFY_JWT = new Set(['record-puantaj', 'delete-user-webhook'])
 
 function getAuthToken(req: Request) {
   const authHeader = req.headers.get('authorization')
@@ -30,7 +32,8 @@ async function verifyJWT(jwt: string): Promise<boolean> {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method !== 'OPTIONS' && VERIFY_JWT) {
+  const fnName = new URL(req.url).pathname.split('/')[1]
+  if (req.method !== 'OPTIONS' && VERIFY_JWT && !NO_VERIFY_JWT.has(fnName)) {
     try {
       const token = getAuthToken(req)
       const isValidJWT = await verifyJWT(token)
